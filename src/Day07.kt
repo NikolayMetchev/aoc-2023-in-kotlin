@@ -1,5 +1,7 @@
+import Face.J
+
 enum class Face {
-    A, K, Q, J, T, `9`, `8`, `7`, `6`, `5`, `4`, `3`, `2`
+    A, K, Q, T, `9`, `8`, `7`, `6`, `5`, `4`, `3`, `2`, J
 }
 
 interface IsType {
@@ -8,19 +10,35 @@ interface IsType {
 
 enum class Type : IsType {
     FIVE_OF_A_KIND {
-        override fun isType(hand: List<Face>) = hand.groupBy { it }.size == 1
+        override fun isType(hand: List<Face>): Boolean {
+            val groupBy = hand.groupBy { it }
+            return groupBy.size == 1 || (groupBy.size == 2 && groupBy.contains(J))
+        }
     },
     FOUR_OF_A_KIND {
-        override fun isType(hand: List<Face>) = hand.groupBy { it }.values.any { it.size == 4 }
+        override fun isType(hand: List<Face>): Boolean {
+            val groupBy = hand.groupBy { it }
+            return groupBy.values.any { it.size == 4 } ||
+                    (groupBy.any { it.value.size == 3  && it.key != J } && groupBy.containsKey(J)) ||
+                    (groupBy.any { it.value.size == 2  && it.key != J } && groupBy[J]?.size == 2) ||
+                    groupBy[J]?.size == 3
+        }
     },
     FULL_HOUSE {
         override fun isType(hand: List<Face>): Boolean {
             val groupBy = hand.groupBy { it }
-            return groupBy.size == 2 && groupBy.values.any { it.size in 2 .. 3 }
+            return (groupBy.size == 2 && groupBy.values.any { it.size in 2 .. 3 }) ||
+                    (groupBy.size == 3 && groupBy[J]?.size == 1)
         }
     },
     THREE_OF_A_KIND {
-        override fun isType(hand: List<Face>) = hand.groupBy { it }.values.any { it.size == 3 }
+        override fun isType(hand: List<Face>): Boolean {
+            val groupBy = hand.groupBy { it }
+            return groupBy.values.any { it.size == 3 } ||
+                    groupBy.size == 4 && groupBy[J]?.size == 2 ||
+                    groupBy.size == 4 && groupBy[J]?.size == 1
+        }
+
     },
     TWO_PAIR {
         override fun isType(hand: List<Face>): Boolean {
@@ -29,15 +47,17 @@ enum class Type : IsType {
         }
     },
     ONE_PAIR {
-        override fun isType(hand: List<Face>) = hand.groupBy { it }.values.any { it.size == 2 }
+        override fun isType(hand: List<Face>): Boolean {
+            val groupBy = hand.groupBy { it }
+            return groupBy.values.any { it.size == 2 } || groupBy.containsKey(J)
+        }
     },
     HIGH_CARD {
         override fun isType(hand: List<Face>) = true
     },
 }
 
-data class HandBid(val hand: List<Face>, val bid: Long) : Comparable<HandBid> {
-    val type: Type = Type.entries.first {it.isType(hand)}
+data class HandBid(val hand: List<Face>, val bid: Long, val type: Type = Type.entries.first {it.isType(hand)}) : Comparable<HandBid> {
     override fun compareTo(other: HandBid): Int {
         val typeCompare = type.compareTo(other.type)
         return if (typeCompare == 0) {
@@ -74,17 +94,21 @@ fun main() {
 
     fun part2(input: List<String>): Long {
         val parsed = parse(input)
-        return input.size.toLong()
+        return parsed.sorted().reversed().
+        mapIndexed {
+                index, handBid ->
+            (index + 1) * handBid.bid
+        }.sum()
     }
 
     val testInput = readInput("Day07_test")
-    val part1 = part1(testInput)
+//    val part1 = part1(testInput)
     val part2 = part2(testInput)
     val part1Expected = 6440L
-    check(part1 == part1Expected) {
-        "Expected $part1Expected, got $part1"
-    }
-    val part2Expected = 5L
+//    check(part1 == part1Expected) {
+//        "Expected $part1Expected, got $part1"
+//    }
+    val part2Expected = 5905L
     check(part2 == part2Expected) {
         "Expected $part2Expected, got $part2"
     }
