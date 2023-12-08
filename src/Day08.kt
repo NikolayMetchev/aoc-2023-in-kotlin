@@ -43,6 +43,14 @@ tailrec fun traverse2(directions: String, index: Int, currentNode: String, nodes
 //    return traverse(directions, nextIndex, nextNodes, nodes, currentStep + 1)
 //}
 
+fun lcm(a: Long, b: Long) = a * (b / gcd(a, b))
+
+fun gcd(a: Long, b: Long): Long = when {
+    a < b -> gcd(b, a)
+    b == 0L -> a
+    else -> gcd(b, a % b)
+}
+
 fun main() {
 
     fun parse(input: List<String>): Pair<String, Map<String, Pair<String, String>>> {
@@ -86,12 +94,7 @@ fun main() {
             traverse2(directions, 0, it, nodes, 0)
         }
         println(lengths)
-        val ans = lengths.fold(lengths[0]) { acc, l ->
-            findMatch(listOf(acc, l))
-        }
-//        val currentLengths = findMatch(lengths.subList(0,2))
-//        println(currentLengths)
-        return ans
+        return lengths.reduce(::lcm)
     }
 
     val part1 = part1(readInput("Day08_test"))
