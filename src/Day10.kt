@@ -6,6 +6,7 @@ import Direction.RIGHT
 import Direction.UP
 import Direction.UP_LEFT
 import Direction.UP_RIGHT
+import kotlin.enums.EnumEntries
 
 enum class Direction {
     UP,
@@ -144,7 +145,13 @@ class Maze(val input: List<String>) {
     }
 
     fun getState(point: Point) = state[point.y][point.x]
-    fun setState(point: Point, state: State) {
+
+    private fun setState(point: Point, directions: Collection<Direction>) {
+        setState(point, *directions.toTypedArray())
+    }
+
+    fun setState(point: Point, vararg directions: Direction) {
+        val state = State(*directions)
         val state1 = this.state[point.y][point.x]
         require(state1 == null || state1 == state) {
             "State already set for $point to $state, tried to set to $state1"
@@ -212,16 +219,15 @@ class Maze(val input: List<String>) {
         }
         val pipe = pipeMap[prettyGet(point)]
         if (pipe == null) {
-            val allStates = State(UP, DOWN, LEFT, RIGHT, UP_LEFT, UP_RIGHT, DOWN_LEFT, DOWN_RIGHT)
             if (Direction.entries.any { isOutside(point, it) == true }) {
-                setState(point, allStates)
+                setState(point, Direction.entries)
             }
         } else {
             when {
-                pipe.oneSide.any { isOutside(point, it) == true } -> setState(point, State(pipe.oneSide))
-                pipe.otherSide.any { isOutside(point, it) == true } -> setState(point, State(pipe.otherSide))
-                pipe.oneSide.any { isInside(point, it) == true } -> setState(point, State(pipe.otherSide))
-                pipe.otherSide.any { isInside(point, it) == true } -> setState(point, State(pipe.oneSide))
+                pipe.oneSide.any { isOutside(point, it) == true } -> setState(point, pipe.oneSide)
+                pipe.otherSide.any { isOutside(point, it) == true } -> setState(point, pipe.otherSide)
+                pipe.oneSide.any { isInside(point, it) == true } -> setState(point, pipe.otherSide)
+                pipe.otherSide.any { isInside(point, it) == true } -> setState(point, pipe.oneSide)
             }
         }
         if (getState(point) == null) {
@@ -337,11 +343,11 @@ fun main() {
         return filter.size.toLong()
     }
 
-//    val part1 = part1(readInput("Day10_test"))
-//    val part1Expected = 8L
-//    check(part1 == part1Expected) {
-//        "Expected $part1Expected, got $part1"
-//    }
+    val part1 = part1(readInput("Day10_test"))
+    val part1Expected = 8L
+    check(part1 == part1Expected) {
+        "Expected $part1Expected, got $part1"
+    }
 
     fun checkPart2(input: String, expected: Long) {
         val part2 = part2(readInput(input))
@@ -350,10 +356,10 @@ fun main() {
             "Expected $part2Expected, got $part2"
         }
     }
-//    checkPart2("Day10_test2", 4L)
-//    checkPart2("Day10_test3", 4L)
+    checkPart2("Day10_test2", 4L)
+    checkPart2("Day10_test3", 4L)
     checkPart2("Day10_test4", 8L)
-//    checkPart2("Day10_test5", 10L)
+    checkPart2("Day10_test5", 10L)
 
     val input = readInput("Day10")
     part1(input).println() // 7012
