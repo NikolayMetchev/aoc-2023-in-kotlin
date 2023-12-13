@@ -66,8 +66,11 @@ fun main() {
         val substring2 = spec.substring(startingIndex, spec.length)
 //        println("Substring to check $substring2")
         val newSpecs = mutableListOf<Pair<String, Int>>()
+
         val lastValidIndex = (spec.length - restSum).coerceAtMost(spec.length - firstSize)
-        for (firstIndex in startingIndex ..lastValidIndex) {
+        val validRange = startingIndex..lastValidIndex
+        val firstHashIndex = validRange.firstOrNull() { spec[it] == '#' } ?: Int.MAX_VALUE
+        for (firstIndex in startingIndex..lastValidIndex.coerceAtMost(firstHashIndex)) {
                 val lastIndex = firstIndex + firstSize - 1
                 if (firstIndex > 0 && spec[firstIndex - 1] == '#') {
                     continue
