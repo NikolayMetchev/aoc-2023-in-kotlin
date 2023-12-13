@@ -43,7 +43,7 @@ fun main() {
         startingIndex: Int,
         startLengthsIndex: Int,
         springLengths: List<Int>,
-    ) : Long {
+    ) : Int {
         if (startLengthsIndex == springLengths.size) {
             val newSpec = spec.replace("?", ".")
 //            println("adding spec = $newSpec")
@@ -62,7 +62,7 @@ fun main() {
 //        val rest = springLengths.drop(1)
 //        val restSum = springLengths.sumOf {  }
         val restRange: IntRange = startLengthsIndex + 1.. springLengths.lastIndex
-        val restSum = restRange.sumOf { springLengths[it] } + restRange.count() - 1
+        val restSum = restRange.sumOf { springLengths[it] } + (springLengths.lastIndex - startLengthsIndex)
         val substring2 = spec.substring(startingIndex, spec.length)
 //        println("Substring to check $substring2")
         val newSpecs = mutableListOf<Pair<String, Int>>()
@@ -70,7 +70,12 @@ fun main() {
         val lastValidIndex = (spec.length - restSum).coerceAtMost(spec.length - firstSize)
         val validRange = startingIndex..lastValidIndex
         val firstHashIndex = validRange.firstOrNull() { spec[it] == '#' } ?: Int.MAX_VALUE
-        for (firstIndex in startingIndex..lastValidIndex.coerceAtMost(firstHashIndex)) {
+        val minFirstIndex = if (startLengthsIndex == springLengths.lastIndex) {
+            spec.lastIndexOf('#') - firstSize + 1
+        } else {
+            0
+        }
+        for (firstIndex in startingIndex.coerceAtLeast(minFirstIndex)..lastValidIndex.coerceAtMost(firstHashIndex)) {
                 val lastIndex = firstIndex + firstSize - 1
                 if (firstIndex > 0 && spec[firstIndex - 1] == '#') {
                     continue
@@ -141,19 +146,19 @@ fun main() {
         ans
     }
 
-    fun part1(input: List<String>): Long {
+    fun part1(input: List<String>): Int {
         val springSpec = parse(input)
 //        println(springSpec)
         return computeAnswer(springSpec)
     }
 
-    fun part2(input: List<String>): Long {
+    fun part2(input: List<String>): Int {
         val springSpec = parse(input).map { it.expand() }
 //        println(springSpec)
         return computeAnswer(springSpec)
     }
 
-    fun checkPart1(input: String, expected: Long) {
+    fun checkPart1(input: String, expected: Int) {
         val part1 = part1(readInput(input))
         val part1Expected = expected
         check(part1 == part1Expected) {
@@ -161,7 +166,7 @@ fun main() {
         }
     }
 
-    fun checkPart2(input: String, expected: Long) {
+    fun checkPart2(input: String, expected: Int) {
         val part2 = part2(readInput(input))
         val part2Expected = expected
         check(part2 == part2Expected) {
@@ -170,13 +175,13 @@ fun main() {
     }
 
 //    checkPart1("Day12_test0", 1L)
-    checkPart1("Day12_test1", 4L)
-    checkPart1("Day12_test2", 1L)
-    checkPart1("Day12_test3", 1L)
-    checkPart1("Day12_test4", 4L)
-    checkPart1("Day12_test5", 10L)
-    checkPart1("Day12_test", 21L)
-    checkPart1("Day12", 7732L)
+    checkPart1("Day12_test1", 4)
+    checkPart1("Day12_test2", 1)
+    checkPart1("Day12_test3", 1)
+    checkPart1("Day12_test4", 4)
+    checkPart1("Day12_test5", 10)
+    checkPart1("Day12_test", 21)
+    checkPart1("Day12", 7732)
     checkPart2("Day12_test", 525152)
 //    checkPart2("Day12_test", 6)
 
