@@ -169,9 +169,10 @@ fun main() {
     }
 
     fun computeAnswer(springSpec: List<SpringData>) = springSpec.sumOf {
-        val ans  = computeArrangements(it.specs, 0, 0, it.springLengths.toIntArray(), HashMap())
+        val cache = HashMap<Key, Long>()
+        val ans  = computeArrangements(it.specs, 0, 0, it.springLengths.toIntArray(), cache)
 //        println("${it.specs} foundSpecs = $foundSpecs, size=${it.springLengths}: $ans")
-        println("${it.specs} size=${it.springLengths}: $ans")
+        println("${it.specs} size=${it.springLengths}: $ans. cacheSize=${cache.size}")
         ans
     }
 
