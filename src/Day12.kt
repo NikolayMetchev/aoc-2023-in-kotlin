@@ -44,6 +44,9 @@ fun main() {
         if (startingIndex >= spec.length) {
             return
         }
+        if ((0 ..< startingIndex).any { spec[it] == '#' }) {
+            return
+        }
         val firstSize = springLengths[startLengthsIndex]
 //        val rest = springLengths.drop(1)
 //        val restSum = springLengths.sumOf {  }
