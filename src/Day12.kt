@@ -43,21 +43,20 @@ fun main() {
         startingIndex: Int,
         startLengthsIndex: Int,
         springLengths: List<Int>,
-        foundSpecs: MutableSet<BitSet>
-    ) {
+    ) : Long {
         if (startLengthsIndex == springLengths.size) {
             val newSpec = spec.replace("?", ".")
 //            println("adding spec = $newSpec")
             if (!newSpec.contains('#')) {
-                foundSpecs.add(newSpec.toBitSet())
+                return 1
             }
-            return
+            return 0
         }
         if (startingIndex >= spec.length) {
-            return
+            return 0
         }
         if ((0 ..< startingIndex).any { spec[it] == '#' }) {
-            return
+            return 0
         }
         val firstSize = springLengths[startLengthsIndex]
 //        val rest = springLengths.drop(1)
@@ -123,19 +122,17 @@ fun main() {
                 }
             }
 //        println("spec = $spec, size=$firstSize, rest = $rest, newSpecs = $newSpecs")
-        newSpecs.forEach {
+        return newSpecs.sumOf {
             if (it.first.length != spec.length) {
                 error("newSpecs.size != spec.length")
             }
 //            println("${it} rest=$rest")
-            computeArrangements(it.first, it.second, startLengthsIndex + 1, springLengths, foundSpecs)
+            computeArrangements(it.first, it.second, startLengthsIndex + 1, springLengths)
         }
     }
 
     fun computeAnswer(springSpec: List<SpringData>) = springSpec.sumOf {
-        val foundSpecs = HashSet<BitSet>()
-        computeArrangements(it.specs, 0, 0, it.springLengths, foundSpecs = foundSpecs)
-        val ans = foundSpecs.size.toLong()
+        val ans  = computeArrangements(it.specs, 0, 0, it.springLengths)
 //        println("${it.specs} foundSpecs = $foundSpecs, size=${it.springLengths}: $ans")
         println("${it.specs} size=${it.springLengths}: $ans")
         ans
