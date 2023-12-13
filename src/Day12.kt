@@ -1,3 +1,5 @@
+import java.util.BitSet
+
 data class SpringData(val specs: String, val springLengths: List<Int>) {
     fun expand(): SpringData {
         val newSpringLengths = mutableListOf<Int>()
@@ -26,18 +28,28 @@ fun main() {
         }
     }
 
+    fun String.toBitSet() : BitSet {
+        val bitSet = BitSet(this.length)
+        this.forEachIndexed { index, c ->
+            if (c == 'X') {
+                bitSet.set(index)
+            }
+        }
+        return bitSet
+    }
+
     fun computeArrangements(
         spec: String,
         startingIndex: Int,
         startLengthsIndex: Int,
         springLengths: List<Int>,
-        foundSpecs: MutableSet<String>
+        foundSpecs: MutableSet<BitSet>
     ) {
         if (startLengthsIndex == springLengths.size) {
             val newSpec = spec.replace("?", ".")
 //            println("adding spec = $newSpec")
             if (!newSpec.contains('#')) {
-                foundSpecs.add(newSpec)
+                foundSpecs.add(newSpec.toBitSet())
             }
             return
         }
@@ -50,31 +62,22 @@ fun main() {
         val firstSize = springLengths[startLengthsIndex]
 //        val rest = springLengths.drop(1)
 //        val restSum = springLengths.sumOf {  }
-        val intRange: IntRange = startLengthsIndex + 1..<springLengths.size
-        val restSum = intRange.sumOf { springLengths[it] } + intRange.count() - 1
+        val restRange: IntRange = startLengthsIndex + 1.. springLengths.lastIndex
+        val restSum = restRange.sumOf { springLengths[it] } + restRange.count() - 1
         val substring2 = spec.substring(startingIndex, spec.length)
 //        println("Substring to check $substring2")
-        val newSpecs =
-            substring2.withIndex().windowed(firstSize).mapNotNull { substring: List<IndexedValue<Char>> ->
-                val firstIndex = substring.first().index + startingIndex
-                val lastIndex = substring.last().index + startingIndex
-
-                if (lastIndex + restSum > spec.length) {
-                    null
-                } else if (firstIndex > 0 && spec[firstIndex - 1] == '#') {
-                    null
+        val newSpecs = mutableListOf<Pair<String, Int>>()
+        val lastValidIndex = (spec.length - restSum).coerceAtMost(spec.length - firstSize)
+        for (firstIndex in startingIndex ..lastValidIndex) {
+                val lastIndex = firstIndex + firstSize - 1
+                if (firstIndex > 0 && spec[firstIndex - 1] == '#') {
+                    continue
                 } else if (lastIndex < spec.length - 1 && spec[lastIndex + 1] == '#') {
-                    null
-                } else if (!substring.all {it.value in invalidEnds }) {
-                    null
+                    continue
+                } else if (!(firstIndex ..< firstIndex + firstSize).all {spec[it] in invalidEnds }) {
+                    continue
                 } else {
-//                println(
-//                    "spec=$spec, startIndex=$startingIndex, first.index=$firstIndex, last.index=$lastIndex, size=$firstSize, rest=$rest, substring=${
-//                        substring.joinToString(
-//                            ""
-//                        ) { it.value.toString() }
-//                    }"
-//                )
+//                println("spec=$spec, startIndex=$startingIndex, first.index=$firstIndex, last.index=$lastIndex, size=$firstSize")
                     val newString = buildString {
                         val prevPrevIndex = firstIndex - 2
                         if (prevPrevIndex >= 0) {
@@ -93,8 +96,8 @@ fun main() {
                                 append(prevChar)
                             }
                         }
-//                    println("appending ${substring.size} Xs")
-                        repeat(substring.size) {
+//                        println("appending ${firstSize} Xs")
+                        repeat(firstSize) {
                             append("X")
                         }
 
@@ -102,10 +105,10 @@ fun main() {
                         if (nextIndex <= spec.lastIndex) {
                             val nextChar = spec[nextIndex]
                             if (nextChar == '?') {
-//                            println("convert from ? nextIndex=.")
+//                            println("convert from $nextChar nextIndex=$nextIndex")
                                 append(".")
                             } else {
-//                            println("appending nextIndex=$nextChar")
+//                            println("appending nextIndex=$nextChar, nextIndex=$nextIndex")
                                 append(nextChar)
                             }
                         }
@@ -116,7 +119,7 @@ fun main() {
                             append(postString)
                         }
                     }
-                    newString to lastIndex + 2
+                    newSpecs.add(newString to lastIndex + 2)
                 }
             }
 //        println("spec = $spec, size=$firstSize, rest = $rest, newSpecs = $newSpecs")
@@ -130,7 +133,7 @@ fun main() {
     }
 
     fun computeAnswer(springSpec: List<SpringData>) = springSpec.sumOf {
-        val foundSpecs = mutableSetOf<String>()
+        val foundSpecs = HashSet<BitSet>()
         computeArrangements(it.specs, 0, 0, it.springLengths, foundSpecs = foundSpecs)
         val ans = foundSpecs.size.toLong()
 //        println("${it.specs} foundSpecs = $foundSpecs, size=${it.springLengths}: $ans")
@@ -166,7 +169,7 @@ fun main() {
         }
     }
 
-    checkPart1("Day12_test0", 1L)
+//    checkPart1("Day12_test0", 1L)
     checkPart1("Day12_test1", 4L)
     checkPart1("Day12_test2", 1L)
     checkPart1("Day12_test3", 1L)
